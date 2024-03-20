@@ -205,9 +205,9 @@ module ALU_tb;
         #10;
         if (result !== (regA + regB)) begin
             $display("Addition test failed");
-            flag ++;
         end else begin
             $display("Addition test passed");
+            flag ++;
         end
 
         // Test case 2: Subtraction
@@ -217,9 +217,9 @@ module ALU_tb;
         #10;
         if (result !== (regA - regB)) begin
             $display("Subtraction test failed");
-            flag ++;
         end else begin
             $display("Subtraction test passed");
+            flag ++;
         end
 
         // Test case 3: Multiplication
@@ -229,9 +229,9 @@ module ALU_tb;
         #10;
         if (result !== (regA * regB)) begin
             $display("Multiplication test failed");
-            flag ++;
         end else begin
             $display("Multiplication test passed");
+            flag ++;
         end
 
         // Test case 4: Division
@@ -241,9 +241,9 @@ module ALU_tb;
         #10;
         if (result !== (regA / regB)) begin
             $display("Division test failed");
-            flag ++;
         end else begin
             $display("Division test passed");
+            flag ++;
         end
 
         // Test case 5: Bitwise AND
@@ -253,9 +253,9 @@ module ALU_tb;
         #10;
         if (result !== (regA & regB)) begin
             $display("Bitwise AND test failed");
-            flag ++;
         end else begin
             $display("Bitwise AND test passed");
+            flag ++;
         end
 
         // Test case 6: Bitwise OR
@@ -265,9 +265,9 @@ module ALU_tb;
         #10;
         if (result !== (regA | regB)) begin
             $display("Bitwise OR test failed");
-            flag ++;
         end else begin
             $display("Bitwise OR test passed");
+            flag ++;
         end
 
         // Test case 7: Bitwise XOR
@@ -277,9 +277,9 @@ module ALU_tb;
         #10;
         if (result !== (regA ^ regB)) begin
             $display("Bitwise XOR test failed");
-            flag ++;
         end else begin
             $display("Bitwise XOR test passed");
+            flag ++;
         end
         
         // Test case 8: Logical Left Shift
@@ -289,9 +289,9 @@ module ALU_tb;
         #10;
         if (result !== (regA << regB)) begin
             $display("LLS test failed");
-            flag ++;
         end else begin
             $display("LLS test passed");
+            flag ++;
         end
         
         // Test case 9: Logical Right Shift
@@ -301,9 +301,9 @@ module ALU_tb;
         #10;
         if (result !== (regA >> regB)) begin
             $display("LRS test failed");
-            flag ++;
         end else begin
             $display("LRS test passed");
+            flag ++;
         end
         
         // Test case 10: Increment
@@ -312,9 +312,9 @@ module ALU_tb;
         #10;
         if (result !== (regA + 1)) begin
             $display("Increment test failed");
-            flag ++;
         end else begin
             $display("Increment test passed");
+            flag ++;
         end
         
         // Test case 11: Decrement
@@ -323,9 +323,9 @@ module ALU_tb;
         #10;
         if (result !== (regA - 1)) begin
             $display("Decrement test failed");
-            flag ++;
         end else begin
             $display("Decrement test passed");
+            flag ++;
         end
         
         // End simulation
