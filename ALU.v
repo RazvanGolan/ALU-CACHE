@@ -1,3 +1,68 @@
+module left_shift(
+    input [31:0] a,
+    output reg [31:0] result
+);
+    assign result = a << 1;
+endmodule
+
+module ArrayMultiplier (
+    input [15:0] a,
+    input [15:0] b,
+    output reg [31:0] result
+);
+
+wire [31:0] sum_mult;
+wire [15:0] partial_products [15:0];
+wire [16:0] carry;
+genvar i;
+
+generate
+    for(i=0; i<16; i = i+1) begin
+        if(b[i]) begin
+            ripple_carry_32_bit rca32 (
+                    .a(a),
+                    .b(sum_mult),
+                    .cin(),
+                    .sum(sum_mult),
+                    .cout()
+                );
+        end
+        left_shift ls(.a(sum_mult), .result(sum_mult));
+    end
+endgenerate
+
+initial begin
+    sum_mult = 0;
+end
+
+assign result = sum_mult;
+endmodule
+
+
+module ripple_carry_32_bit(a, b, cin, sum, cout);
+input [31:0] a,b;
+input cin;
+output [31:0] sum;
+output cout;
+wire c1;
+
+ripple_carry_16_bit rca1(
+.a(a[15:0]),
+.b(b[15:0]),
+.cin(cin),
+.sum(sum[15:0]),
+.cout(c1)
+);
+
+ripple_carry_16_bit rca2(
+.a(a[31:16]),
+.b(b[31:16]),
+.cin(c1),
+.sum(sum[31:16]),
+.cout()
+);
+endmodule
+
 module ripple_carry_16_bit(a, b, cin,sum, cout);
 input [15:0] a,b;
 input cin;
@@ -132,13 +197,17 @@ ripple_carry_16_bit decrement_inst (
 
 
 // Multiplier
-reg [31:0] mult_result; // Considering 32x32 multiplication
+wire [31:0] mult_result; // Considering 32x32 multiplication
+
+ArrayMultiplier multiplie_inst(
+    .a(operandA),
+    .b(operandB),
+    .result(mult_result)
+);
 
 // Division
 reg [15:0] div_result;
 
-// Mux
-reg [31:0] mux_output;
 
 // Control unit
 always @(posedge clk or posedge reset) begin
@@ -148,14 +217,13 @@ always @(posedge clk or posedge reset) begin
     else begin
         case(opcode)
             4'b0000: begin // Add
-                result = add_result;
+                result <= add_result;
             end
             4'b0001: begin // Substract
-                result = sub_result;
+                result <= sub_result;
             end
             4'b0010: begin // Multiply
-                mult_result <= operandA * operandB;
-                result <= mult_result[31:0]; // Considering only lower 32 bits of the result
+                result <= mult_result; 
             end
             4'b0011: begin // Division
                 div_result <= operandA / operandB;
@@ -258,7 +326,7 @@ module ALU_tb;
         opcode = 4'b0010; // Multiply
         #50;
         if (result !== (regA * regB)) begin
-            $display("Multiplication test failed");
+            $display("Multiplication test failed", result, regA*regB);
         end else begin
             $display("Multiplication test passed");
             flag ++;
