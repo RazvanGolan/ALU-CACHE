@@ -1,12 +1,12 @@
 module ArrayMultiplier (
-    input [15:0] a,
-    input [15:0] b,
-    output[31:0] result
+    input signed[15:0] a,
+    input signed[15:0] b,
+    output signed[31:0] result
 );
 
-wire [31:0] sum_mult;
-reg [31:0] mult;
-reg [15:0] b2;
+wire signed[31:0] sum_mult;
+reg signed[31:0] mult;
+reg signed[15:0] b2;
 integer i;
 
 
@@ -37,9 +37,9 @@ endmodule
 
 
 module ripple_carry_32_bit(a, b, cin, sum, cout);
-input [31:0] a,b;
+input signed[31:0] a,b;
 input cin;
-output  [31:0] sum;
+output  signed[31:0] sum;
 output cout;
 wire c1;
 
@@ -61,9 +61,9 @@ ripple_carry_16_bit rca2(
 endmodule
 
 module ripple_carry_16_bit(a, b, cin,sum, cout);
-input [15:0] a,b;
+input signed[15:0] a,b;
 input cin;
-output [15:0] sum;
+output signed[15:0] sum;
 output cout;
 wire c1,c2,c3;
 
@@ -101,10 +101,10 @@ endmodule
 ////////////////////////////////////
 
 module ripple_carry_4_bit(a, b, cin, sum, cout);
-input [3:0] a,b;
+input signed[3:0] a,b;
 input cin;
 wire c1,c2,c3;
-output [3:0] sum;
+output signed[3:0] sum;
 output cout;
 
 full_adder fa0(.a(a[0]), .b(b[0]),.cin(cin), .sum(sum[0]),.cout(c1));
@@ -131,21 +131,190 @@ endmodule
 module half_adder( a,b, sum, cout );
 input a,b;
 output sum, cout;
-xor xor_1 (sum,a,b);
-and and_1 (cout,a,b);
+
+AND_gate and_inst (.a(a), .b(b), .c(cout));
+XOR_gate xor_inst (.a(a), .b(b), .c(sum));
+
+endmodule
+
+module OR_gate(
+    input a, b,
+    output reg c
+);
+
+always @* begin
+    if(a == 1'b0) begin
+        if(b == 1'b0) begin
+            c = 1'b0;
+        end
+        else
+            c = 1'b1;
+    end
+    else 
+    c = 1'b1;
+end
+
+endmodule
+
+module AND_gate(
+    input a, b,
+    output reg c
+);
+
+always @* begin
+    if(a == 1'b1) begin
+        if(b == 1'b1) begin
+            c = 1'b1;
+        end
+        else
+            c = 1'b0;
+    end
+    else 
+    c = 1'b0;
+end
+
+endmodule
+
+module XOR_gate(
+    input a, b,
+    output reg c
+);
+
+always @* begin
+    if(a == 1'b1) begin
+        if(b == 1'b0) begin
+            c = 1'b1;
+        end
+        else
+            c = 1'b0;
+    end
+    else begin
+        if(b == 1'b1)
+            c = 1'b1;
+        else
+            c = 1'b0;
+    end
+end
+
+endmodule
+
+module bitwise_and (
+    input signed [15:0]a, b,
+    output reg signed[15:0] c
+);
+
+reg a1, b1;
+wire c1;
+integer i;
+AND_gate and_inst(.a(a1), .b(b1), .c(c1));
+
+always @* begin
+    for(i = 0; i < 16; i++) begin
+        a1 = a[i];
+        b1 = b[i];
+        #1
+        c[i] = c1;
+    end
+end
+
+endmodule
+
+module bitwise_or (
+    input signed [15:0]a, b,
+    output reg signed[15:0] c
+);
+
+reg a1, b1;
+wire c1;
+integer i;
+OR_gate and_inst(.a(a1), .b(b1), .c(c1));
+
+always @* begin
+    for(i = 0; i < 16; i++) begin
+        a1 = a[i];
+        b1 = b[i];
+        #1
+        c[i] = c1;
+    end
+end
+
+endmodule
+
+module bitwise_xor (
+    input signed [15:0]a, b,
+    output reg signed[15:0] c
+);
+
+reg a1, b1;
+wire c1;
+integer i;
+XOR_gate and_inst(.a(a1), .b(b1), .c(c1));
+
+always @* begin
+    for(i = 0; i < 16; i++) begin
+        a1 = a[i];
+        b1 = b[i];
+        #1
+        c[i] = c1;
+    end
+end
+
+endmodule
+
+
+module logical_left_shift(
+    input signed [15:0]a, b,
+    output signed [15:0] result
+);
+
+reg signed[15:0] res;
+integer i;
+
+always @* begin
+res = a;
+    for(i=0; i<b; i++) begin
+        
+        res = {res[14:0], 1'b0};
+        
+    end
+end
+
+assign result = res;
+
+endmodule
+
+module logical_right_shift(
+    input signed [15:0]a, b,
+    output signed [15:0] result
+);
+
+reg signed[15:0] res;
+integer i;
+
+always @* begin
+res = a;
+    for(i=0; i<b; i++) begin
+        
+        res = {1'b0, res[15:1]};
+        
+    end
+end
+
+assign result = res;
+
 endmodule
 
 module ALU (
-    input [15:0] operandA,
-    input [15:0] operandB,
+    input signed[15:0] operandA,
+    input signed[15:0] operandB,
     input [3:0] opcode, // Control signals for selecting operation
     input reset,
     input clk,
-    output reg [31:0] result
+    output reg signed[31:0] result
 );
 
 // Adder
-wire [15:0] add_result;
+wire signed[15:0] add_result;
 
 // Instantiate RippleCarry16Bit module for addition
 ripple_carry_16_bit adder_inst (
@@ -157,19 +326,19 @@ ripple_carry_16_bit adder_inst (
 );
 
 // Subtraction
-wire [15:0] sub_result;
+wire signed[15:0] sub_result;
 
 // Instantiate RippleCarry16Bit module for subtraction
 ripple_carry_16_bit subtractor_inst (
     .a(operandA),
-    .b(~operandB + opcode[0]), // Two's complement of operandB + carry-in
-    .cin(1'b0), // Set carry-in based on opcode (0 for addition, 1 for subtraction)
+    .b(~operandB), // Two's complement of operandB + carry-in
+    .cin(1'b1), // Set carry-in based on opcode (0 for addition, 1 for subtraction)
     .sum(sub_result),
     .cout()
 );
 
 // Increment
-wire [15:0] increment;
+wire signed[15:0] increment;
 
 // Instantiate RippleCarryAdder module for Increment
 ripple_carry_16_bit increment_inst (
@@ -181,7 +350,7 @@ ripple_carry_16_bit increment_inst (
 );
 
 // Decrement
-wire [15:0] decrement;
+wire signed[15:0] decrement;
 
 // Instantiate RippleCarryAdder module for Decrement
 ripple_carry_16_bit decrement_inst (
@@ -194,7 +363,7 @@ ripple_carry_16_bit decrement_inst (
 
 
 // Multiplier
-wire [31:0] mult_result; // Considering 32x32 multiplication
+wire signed[31:0] mult_result; // Considering 32x32 multiplication
 
 ArrayMultiplier multiplie_inst(
     .a(operandA),
@@ -204,6 +373,53 @@ ArrayMultiplier multiplie_inst(
 
 // Division
 reg [15:0] div_result;
+
+
+
+// Logical left shift
+wire signed[15:0] lls_result;
+
+logical_left_shift lls_inst(
+    .a(operandA),
+    .b(operandB),
+    .result(lls_result)
+);
+
+// Logical right shift
+wire signed[15:0] lrs_result;
+
+logical_right_shift lrs_inst(
+    .a(operandA),
+    .b(operandB),
+    .result(lrs_result)
+);
+
+// Bitwise AND 
+wire signed[15:0] and_result;
+
+bitwise_and and_inst(
+    .a(operandA),
+    .b(operandB),
+    .c(and_result)
+);
+
+// Bitwise OR
+wire signed[15:0] or_result;
+
+bitwise_or or_inst(
+    .a(operandA),
+    .b(operandB),
+    .c(or_result)
+);
+
+// Bitwise XOR
+wire signed[15:0] xor_result;
+
+bitwise_xor xor_inst(
+    .a(operandA),
+    .b(operandB),
+    .c(xor_result)
+);
 
 
 // Control unit
@@ -227,19 +443,19 @@ always @(posedge clk or posedge reset) begin
                 result <= div_result[15:0]; 
             end
             4'b0100: begin // AND
-                result <= operandA & operandB;
+                result <= and_result;
             end
             4'b0101: begin // OR
-                result <= operandA | operandB;
+                result <= or_result;
             end
             4'b0110: begin // XOR
-                result <= operandA ^ operandB;
+                result <= xor_result;
             end
             4'b0111: begin // LLS
-                result <= operandA << operandB;
+                result <= lls_result;
             end
             4'b1000: begin // LRS
-                result <= operandA >> operandB;
+                result <= lrs_result;
             end
             4'b1001: begin // Increment
                 result <= increment;
@@ -260,13 +476,14 @@ module ALU_tb;
     parameter CLK_PERIOD = 100; // Clock period in ns
 
     // Signals
-    reg [15:0] regA;
-    reg [15:0] regB;
+    reg signed[15:0] regA;
+    reg signed[15:0] regB;
+    reg signed[15:0] regC;
     reg [3:0] opcode;
     reg reset;
     reg clk;
 
-    wire [31:0] result;
+    wire signed[31:0] result;
     
     reg [3:0] flag = 0;
 
@@ -286,8 +503,8 @@ module ALU_tb;
     // Testbench
     initial begin
         // Initialize inputs
-        regA = 10;
-        regB = 5;
+        regA = -10;
+        regB = -11;
         clk = 0;
         reset = 1;
         #20; // Wait for 20 time units
@@ -296,8 +513,9 @@ module ALU_tb;
         // Test case 1: Addition
         opcode = 4'b0000; // Add
         #50;
-        if (result !== (regA + regB)) begin
-            $display("Addition test failed", result);
+        regC = regA + regB;
+        if (result !== regC) begin
+            $display("Addition test failed", result, regC);
         end else begin
             $display("Addition test passed");
             flag ++;
@@ -305,12 +523,13 @@ module ALU_tb;
         #50;
         
         // Test case 2: Subtraction
-        regA = 15;
+        regA = -15;
         regB = 7;
         opcode = 4'b0001; // Subtract
         #50;
-        if (result !== (regA - regB)) begin
-            $display("Subtraction test failed");
+        regC = regA - regB;
+        if (result !== regC) begin
+            $display("Subtraction test failed", result, regC);
         end else begin
             $display("Subtraction test passed");
             flag ++;
@@ -344,12 +563,13 @@ module ALU_tb;
         #50;
         
         // Test case 5: Bitwise AND
-        regA = 15;
-        regB = 10;
+        regA = 4;
+        regB = -6;
         opcode = 4'b0100; // AND
         #50;
-        if (result !== (regA & regB)) begin
-            $display("Bitwise AND test failed");
+        regC = regA & regB;
+        if (result !== regC) begin
+            $display("Bitwise AND test failed", result, regC);
         end else begin
             $display("Bitwise AND test passed");
             flag ++;
@@ -361,8 +581,9 @@ module ALU_tb;
         regB = 224;
         opcode = 4'b0101; // OR
         #50;
-        if (result !== (regA | regB)) begin
-            $display("Bitwise OR test failed");
+        regC = regA | regB;
+        if (result !== regC) begin
+            $display("Bitwise OR test failed", result, regC);
         end else begin
             $display("Bitwise OR test passed");
             flag ++;
@@ -370,12 +591,13 @@ module ALU_tb;
         #50;
         
         // Test case 7: Bitwise XOR
-        regA = 134;
-        regB = 8;
+        regA = 10;
+        regB = -1;
         opcode = 4'b0110; // XOR
         #50;
-        if (result !== (regA ^ regB)) begin
-            $display("Bitwise XOR test failed");
+        regC = regA ^ regB;
+        if (result !== regC) begin
+            $display("Bitwise XOR test failed", result, regC);
         end else begin
             $display("Bitwise XOR test passed");
             flag ++;
@@ -383,12 +605,13 @@ module ALU_tb;
         #50;
         
         // Test case 8: Logical Left Shift
-        regA = 134;
-        regB = 8;
+        regA = 10;
+        regB = 2;
         opcode = 4'b0111; // LLS
         #50;
-        if (result !== (regA << regB)) begin
-            $display("LLS test failed");
+        regC = regA << regB;
+        if (result !== regC) begin
+            $display("LLS test failed", result, regC);
         end else begin
             $display("LLS test passed");
             flag ++;
@@ -396,12 +619,13 @@ module ALU_tb;
         #50;
         
         // Test case 9: Logical Right Shift
-        regA = 134;
-        regB = 8;
+        regA = 138;
+        regB = 4;
         opcode = 4'b1000; // LRS
         #50;
-        if (result !== (regA >> regB)) begin
-            $display("LRS test failed");
+        regC = regA >> regB;
+        if (result !== regC) begin
+            $display("LRS test failed", result, regC);
         end else begin
             $display("LRS test passed");
             flag ++;
