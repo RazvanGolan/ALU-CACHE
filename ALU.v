@@ -1,48 +1,45 @@
-module left_shift(
-    input [31:0] a,
-    output reg [31:0] result
-);
-    assign result = a << 1;
-endmodule
-
 module ArrayMultiplier (
     input [15:0] a,
     input [15:0] b,
-    output reg [31:0] result
+    output[31:0] result
 );
 
 wire [31:0] sum_mult;
-wire [15:0] partial_products [15:0];
-wire [16:0] carry;
-genvar i;
+reg [31:0] mult;
+reg [15:0] b2;
+integer i;
 
-generate
+
+ripple_carry_32_bit rca32 (
+    .a(0), 
+    .b(0),
+    .cin(),
+    .sum(),
+    .cout()
+);
+
+always @* begin
+b2 = b;
+mult = 0;
     for(i=0; i<16; i = i+1) begin
-        if(b[i]) begin
-            ripple_carry_32_bit rca32 (
-                    .a(a),
-                    .b(sum_mult),
-                    .cin(),
-                    .sum(sum_mult),
-                    .cout()
-                );
+        if(b2[i]) begin
+            // rca32.b = {16'b0, a};
+            // rca32.a = sum_mult;
+            // rca32.sum = sum_mult;
         end
-        left_shift ls(.a(sum_mult), .result(sum_mult));
+        // sum_mult = sum_mult << 1;
     end
-endgenerate
-
-initial begin
-    sum_mult = 0;
 end
 
 assign result = sum_mult;
+
 endmodule
 
 
 module ripple_carry_32_bit(a, b, cin, sum, cout);
 input [31:0] a,b;
 input cin;
-output [31:0] sum;
+output  [31:0] sum;
 output cout;
 wire c1;
 
