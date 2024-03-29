@@ -1,3 +1,23 @@
+module logical_left_shift_32_bit(
+    input signed [31:0]a, b,
+    output signed [31:0] result
+);
+
+reg signed[31:0] res;
+integer i;
+
+always @* begin
+res = a;
+    for(i=0; i<b; i++) begin
+        
+        res = {res[30:0], 1'b0};
+        
+    end
+end
+assign result = res;
+
+endmodule
+
 module ArrayMultiplier (
     input signed[15:0] a,
     input signed[15:0] b,
@@ -5,36 +25,40 @@ module ArrayMultiplier (
 );
 
 wire signed[31:0] sum_mult;
-reg signed[31:0] mult;
-reg signed[15:0] b2;
+reg signed[31:0] a1, b1;
+reg signed[31:0] l;
 integer i;
 
 
 ripple_carry_32_bit rca32 (
-    .a(0), 
-    .b(0),
+    .a(a1), 
+    .b(b1),
     .cin(),
-    .sum(),
+    .sum(sum_mult),
     .cout()
 );
 
+logical_left_shift_32_bit lls (
+    .a(l),
+    .b(16'b1),
+    .result(sum_mult)
+);
+
 always @* begin
-b2 = b;
-mult = 0;
     for(i=0; i<16; i = i+1) begin
-        if(b2[i]) begin
-            // rca32.b = {16'b0, a};
-            // rca32.a = sum_mult;
-            // rca32.sum = sum_mult;
+        if(b[i]) begin
+            a1 = a;
+            b1 = sum_mult;
+            #5;
         end
-        // sum_mult = sum_mult << 1;
+        l = sum_mult;
+        #5;
     end
 end
 
 assign result = sum_mult;
 
 endmodule
-
 
 module ripple_carry_32_bit(a, b, cin, sum, cout);
 input signed[31:0] a,b;
@@ -636,8 +660,9 @@ module ALU_tb;
         regA = 45;
         opcode = 4'b1001; // Increment
         #50;
-        if (result !== (regA + 1)) begin
-            $display("Increment test failed");
+        regC = regA + 1;
+        if (result !== regC) begin
+            $display("Increment test failed", result, regC);
         end else begin
             $display("Increment test passed");
             flag ++;
@@ -645,11 +670,12 @@ module ALU_tb;
         #50;
         
         // Test case 11: Decrement
-        regA = 27;
+        regA = -27;
         opcode = 4'b1010; // Decrement
         #50;
-        if (result !== (regA - 1)) begin
-            $display("Decrement test failed");
+        regC = regA - 1;
+        if (result !== regC) begin
+            $display("Decrement test failed", result, regC);
         end else begin
             $display("Decrement test passed");
             flag ++;
