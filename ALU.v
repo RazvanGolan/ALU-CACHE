@@ -15,7 +15,6 @@ res = a;
     end
 end
 assign result = res;
-
 endmodule
 
 module ArrayMultiplier (
@@ -24,8 +23,8 @@ module ArrayMultiplier (
     output signed[31:0] result
 );
 
-wire signed[31:0] sum_mult;
-reg signed[31:0] a1, b1;
+wire signed[31:0] sum_mult, sum_result;
+reg signed[31:0] a1, b1, c1;
 reg signed[31:0] l;
 integer i;
 
@@ -34,25 +33,30 @@ ripple_carry_32_bit rca32 (
     .a(a1), 
     .b(b1),
     .cin(),
-    .sum(sum_mult),
+    .sum(sum_result),
     .cout()
 );
 
 logical_left_shift_32_bit lls (
     .a(l),
-    .b(16'b1),
+    .b(32'b1),
     .result(sum_mult)
 );
 
 always @* begin
+c1 = 0;
+l = 0;
+a1 = a;
     for(i=0; i<16; i = i+1) begin
-        if(b[i]) begin
-            a1 = a;
-            b1 = sum_mult;
-            #5;
+        if(b[i] == 1'b1) begin
+            b1 = c1;
+            #1;
+            c1 = sum_result;
         end
-        l = sum_mult;
-        #5;
+        l = a1;
+        a1 = sum_mult;
+        #1;
+        $display("Muie", sum_mult, sum_result, i);
     end
 end
 
