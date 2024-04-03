@@ -56,11 +56,45 @@ a1 = a;
         l = a1;
         a1 = sum_mult;
         #1;
-        $display("Muie", sum_mult, sum_result, i);
     end
 end
 
 assign result = sum_mult;
+
+endmodule
+
+module plier(
+    input signed[15:0] a,
+    input signed[15:0] b,
+    output signed[31:0] result
+);
+
+reg signed[31:0] a1,b1, sh;
+wire signed[31:0] mult, suma;
+integer i;
+
+ripple_carry_32_bit rca32 (
+    .a(a1), 
+    .b(b1),
+    .cin(),
+    .sum(suma),
+    .cout()
+);
+
+always @* begin
+sh = a;
+    for(i = 0; i<16; i++) begin
+        if(b[i]) begin
+            b1 = 0;
+            a1 = sh;
+        end
+        else begin
+            a1 = 0;
+            b1 = 0;
+        end
+        sh = sh << 1;
+    end
+end
 
 endmodule
 
@@ -162,6 +196,46 @@ output sum, cout;
 
 AND_gate and_inst (.a(a), .b(b), .c(cout));
 XOR_gate xor_inst (.a(a), .b(b), .c(sum));
+
+endmodule
+
+module substractor_16_bit(
+    input signed[15:0] a,b,
+    input cin,
+    output signed[15:0] sum
+);
+
+wire signed [15:0] not_b, result;
+reg signed [15:0] not_b_reg;
+bitwise_not negation(.a(b), .b(not_b));
+
+ripple_carry_16_bit subtractor_inst (
+    .a(a),
+    .b(not_b_reg), // Bitwise negation of b
+    .cin(1'b1), // Set carry-in for C2 trasnformation
+    .sum(result),
+    .cout()
+);
+
+always @* begin
+    not_b_reg = not_b;
+end
+
+assign sum = result;
+
+endmodule
+
+module NOT_gate(
+    input a,
+    output reg b
+);
+
+always @* begin
+    if(a == 1'b0)
+        b = 1'b1;
+    else
+        b = 1'b0;
+end
 
 endmodule
 
@@ -289,6 +363,26 @@ end
 
 endmodule
 
+module bitwise_not (
+    input signed [15:0] a,
+    output reg signed [15:0] b
+);
+
+reg a1;
+wire b1;
+integer i;
+NOT_gate not_inst(.a(a1), .b(b1));
+
+always @* begin
+    for(i = 0; i < 16; i++) begin
+        a1 = a[i];
+        #1
+        b[i] = b1;
+    end
+end
+
+endmodule
+
 
 module logical_left_shift(
     input signed [15:0]a, b,
@@ -357,12 +451,11 @@ ripple_carry_16_bit adder_inst (
 wire signed[15:0] sub_result;
 
 // Instantiate RippleCarry16Bit module for subtraction
-ripple_carry_16_bit subtractor_inst (
+substractor_16_bit subtractor_inst (
     .a(operandA),
-    .b(~operandB), // Two's complement of operandB + carry-in
+    .b(operandB), // Two's complement of operandB + carry-in
     .cin(1'b1), // Set carry-in based on opcode (0 for addition, 1 for subtraction)
-    .sum(sub_result),
-    .cout()
+    .sum(sub_result)
 );
 
 // Increment
@@ -381,12 +474,11 @@ ripple_carry_16_bit increment_inst (
 wire signed[15:0] decrement;
 
 // Instantiate RippleCarryAdder module for Decrement
-ripple_carry_16_bit decrement_inst (
+substractor_16_bit decrement_inst (
     .a(operandA),
-    .b(16'b1111_1111_1111_1111), // minus 1 in two's complement on 16 bits
-    .cin(1'b0),
-    .sum(decrement),
-    .cout()
+    .b(16'b1), 
+    .cin(),
+    .sum(decrement)
 );
 
 
@@ -674,7 +766,7 @@ module ALU_tb;
         #50;
         
         // Test case 11: Decrement
-        regA = -27;
+        regA = 0;
         opcode = 4'b1010; // Decrement
         #50;
         regC = regA - 1;
