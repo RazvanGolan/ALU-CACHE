@@ -20,81 +20,39 @@ endmodule
 module ArrayMultiplier (
     input signed[15:0] a,
     input signed[15:0] b,
-    output signed[31:0] result
+    output signed reg[31:0] result
 );
 
-wire signed[31:0] sum_mult, sum_result;
-reg signed[31:0] a1, b1, c1;
-reg signed[31:0] l;
-integer i;
+// wire signed[31:0] sum_mult, sum_result;
+// reg signed[31:0] a1, b1, c1;
+// reg signed[31:0] l;
+// integer i;
 
 
-ripple_carry_32_bit rca32 (
-    .a(a1), 
-    .b(b1),
-    .cin(),
-    .sum(sum_result),
-    .cout()
-);
+// ripple_carry_32_bit rca32 (
+//     .a(a1), 
+//     .b(b1),
+//     .cin(),
+//     .sum(sum_result),
+//     .cout()
+// );
 
-logical_left_shift_32_bit lls (
-    .a(l),
-    .b(32'b1),
-    .result(sum_mult)
-);
+// logical_left_shift_32_bit lls (
+//     .a(l),
+//     .b(32'b1),
+//     .result(sum_mult)
+// );
 
 always @* begin
-c1 = 0;
-l = 0;
-a1 = a;
+result = 0;
     for(i=0; i<16; i = i+1) begin
         if(b[i] == 1'b1) begin
-            b1 = c1;
-            #1;
-            c1 = sum_result;
+            result = result + (a << i)
         end
-        l = a1;
-        a1 = sum_mult;
-        #1;
     end
 end
 
 assign result = sum_mult;
-
-endmodule
-
-module plier(
-    input signed[15:0] a,
-    input signed[15:0] b,
-    output signed[31:0] result
-);
-
-reg signed[31:0] a1,b1, sh;
-wire signed[31:0] mult, suma;
-integer i;
-
-ripple_carry_32_bit rca32 (
-    .a(a1), 
-    .b(b1),
-    .cin(),
-    .sum(suma),
-    .cout()
-);
-
-always @* begin
-sh = a;
-    for(i = 0; i<16; i++) begin
-        if(b[i]) begin
-            b1 = 0;
-            a1 = sh;
-        end
-        else begin
-            a1 = 0;
-            b1 = 0;
-        end
-        sh = sh << 1;
-    end
-end
 
 endmodule
 
