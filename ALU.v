@@ -1,3 +1,115 @@
+module non_restoring_div(
+    input [15:0] a, b, 
+    output reg [15:0] result, rest
+);
+
+    wire [15:0] shift_result, sum_result, negation_result, shift_result2;
+    reg [15:0] a1, b1, s, a_not, s2;
+    reg a_or, b_or, a_or2, b_or2;
+    wire or_result, or_result2;
+
+    reg [15:0] p, ac, temp;
+    integer i;
+
+    ripple_carry_16_bit rca16(
+        .a(a1), 
+        .b(b1),
+        .cin(),
+        .sum(sum_result),
+        .cout()
+    );
+
+    logical_left_shift lls(
+        .a(s),
+        .b(16'b1),
+        .result(shift_result)
+    );
+
+    logical_left_shift lls2(
+        .a(s2),
+        .b(16'b1),
+        .result(shift_result2)
+    );
+
+    OR_gate or_gate(
+        .a(a_or),
+        .b(b_or),
+        .c(or_result)
+    );
+
+    OR_gate or_gate2(
+        .a(a_or2),
+        .b(b_or2),
+        .c(or_result2)
+    );
+
+    bitwise_not negation(
+        .a(a_not),
+        .b(negation_result)
+    );
+
+    always @(*) begin
+        ac = a;
+        p = 0;
+        result = 0;
+        rest = 0;
+
+        for (i = 0; i < 16; i = i + 1) begin
+            // Shift Left carrying a's MSB into p's LSB
+            p = (p << 1) | ac[15];
+            // s2 = p; #1;
+            // p = shift_result2; 
+            // a_or2 = ac[15];
+            // b_or2 = p[0]; #1;
+            // p[0] = or_result2;
+
+
+            // ac = ac << 1;
+            s = ac; #1;
+            ac = shift_result;
+
+            // Check the old value of p
+            if (p[15]) // if p is negative
+                temp = b; // add divisor
+            else begin
+                temp = ~b + 1; // subtract divisor
+            end
+            // this will do the appropriate add or subtract
+            // depending on the value of temp
+            p = p + temp;
+            // a1 = p;
+            // b1 = temp;
+            // #5;
+            // p = sum_result;
+
+            // Check the new value of p
+            if (p[15]) begin// if p is negative
+                // ac = ac | 0; // no change to quotient
+                b_or = 0;
+            end
+            else begin
+                // ac = ac | 1; 
+                a_or = ac[0];
+                b_or = 1;
+                #1;
+                ac[0] = or_result; 
+            end
+        end
+
+        // Correction is needed if remainder is negative
+        if (p[15]) begin // if p is negative
+            // p = p + b;
+            a1 = p;
+            b1 = b;
+            #1;
+            p = sum_result;
+        end
+
+        result = ac;
+        rest = p;
+    end
+endmodule
+
 module logical_left_shift_32_bit(
     input signed [31:0]a, b,
     output signed [31:0] result
@@ -20,39 +132,45 @@ endmodule
 module ArrayMultiplier (
     input signed[15:0] a,
     input signed[15:0] b,
-    output signed reg[31:0] result
+    output reg signed[31:0] result
 );
 
-// wire signed[31:0] sum_mult, sum_result;
-// reg signed[31:0] a1, b1, c1;
-// reg signed[31:0] l;
-// integer i;
+wire signed[31:0] shift_result, sum_result;
+reg signed[31:0] a1, b1;
+reg signed[31:0] s, j;
 
+ripple_carry_32_bit rca32 (
+    .a(a1), 
+    .b(b1),
+    .cin(),
+    .sum(sum_result),
+    .cout()
+);
 
-// ripple_carry_32_bit rca32 (
-//     .a(a1), 
-//     .b(b1),
-//     .cin(),
-//     .sum(sum_result),
-//     .cout()
-// );
+logical_left_shift_32_bit lls (
+    .a(s),
+    .b(j),
+    .result(shift_result)
+);
 
-// logical_left_shift_32_bit lls (
-//     .a(l),
-//     .b(32'b1),
-//     .result(sum_mult)
-// );
+integer i;
 
 always @* begin
 result = 0;
     for(i=0; i<16; i = i+1) begin
         if(b[i] == 1'b1) begin
-            result = result + (a << i)
+            // result = result + (a << i); asta facem cu porti
+            s = a; // aici il shiftez pe a cu i pozitii
+            j = i;
+            #1;
+            a1 = shift_result; // adun in result pe result + (a << i)
+            b1 = result;
+            #1;
+            result = sum_result;
         end
     end
 end
 
-assign result = sum_mult;
 
 endmodule
 
@@ -450,9 +568,14 @@ ArrayMultiplier multiplie_inst(
 );
 
 // Division
-reg [15:0] div_result;
+wire [15:0] div_result, rest;
 
-
+non_restoring_div division_inst(
+    .a(operandA),
+    .b(operandB),
+    .result(div_result),
+    .rest(rest)
+);
 
 // Logical left shift
 wire signed[15:0] lls_result;
@@ -517,8 +640,7 @@ always @(posedge clk or posedge reset) begin
                 result <= mult_result; 
             end
             4'b0011: begin // Division
-                div_result <= operandA / operandB;
-                result <= div_result[15:0]; 
+                result <= div_result; 
             end
             4'b0100: begin // AND
                 result <= and_result;
@@ -557,6 +679,7 @@ module ALU_tb;
     reg signed[15:0] regA;
     reg signed[15:0] regB;
     reg signed[15:0] regC;
+    reg signed[31:0] regM;
     reg [3:0] opcode;
     reg reset;
     reg clk;
@@ -619,8 +742,9 @@ module ALU_tb;
         regB = 3;
         opcode = 4'b0010; // Multiply
         #50;
-        if (result !== (regA * regB)) begin
-            $display("Multiplication test failed", result, regA*regB);
+        regM = regA * regB;
+        if (result !== regM) begin
+            $display("Multiplication test failed", result, regM);
         end else begin
             $display("Multiplication test passed");
             flag ++;
@@ -629,11 +753,11 @@ module ALU_tb;
         
         // Test case 4: Division
         regA = 25;
-        regB = 5;
+        regB = 3;
         opcode = 4'b0011; // Division
         #50;
         if (result !== (regA / regB)) begin
-            $display("Division test failed");
+            $display("Division test failed", result, regA/regB);
         end else begin
             $display("Division test passed");
             flag ++;
