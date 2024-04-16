@@ -1,8 +1,0 @@
-/home/raul/modelsim/bin/ALU-CACHE/ALU_MODULES/ALU_tb.v {1 {vlog -work work -nocovercells /home/raul/modelsim/bin/ALU-CACHE/ALU_MODULES/ALU_tb.v
-Model Technology ModelSim ALTERA vlog 6.5b Compiler 2009.10 Oct  1 2009
--- Compiling module ALU_tb
-
-Top level modules:
-	ALU_tb
-
-} {} {}}
