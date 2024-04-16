@@ -1,5 +1,5 @@
 # add all Verilog source files, separated by spaces
-set sourcefiles {gates_and_shifts.v ALU.v div.v multiplier.v substractor.vhd adder.v ALU_tb.v}
+set sourcefiles {gates_and_shifts.v ALU.v div.v multiplier.v substractor.v adder.v ALU_tb.v}
 
 # set name of the top module
 set topmodule ALU_tb
