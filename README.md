@@ -14,6 +14,10 @@ The project consists of the following modules:
 6. **Decrementer**: Implements decrement operation.
 7. **Logical Operations**: Implements logical AND, OR, XOR, Left and Right Shift operations.
 
+## Logic Design
+![image](https://github.com/RazvanGolan/ALU-CACHE/assets/117024228/ad832212-a026-4b5a-a83e-f949f6985333)
+
+
 ## Usage
 The ALU module (`ALU.v`) acts as the main controller for performing arithmetic and logical operations. It takes input operands and an opcode to select the desired operation. To use the ALU module, instantiate it in your Verilog design and provide the necessary inputs.
 
