@@ -2,6 +2,8 @@
 
 This repository contains two school projects: an Arithmetic Logic Unit (ALU) implemented in Verilog and a cache controller implemented in SystemVerilog. Both projects were developed as part of academic coursework, providing practical experience in digital design and computer architecture concepts.
 
+The development of these projects was a collaborative effort, and I worked alongside [Raul Candrea](https://github.com/RaulCandrea) on both implementations.
+
 # Content Page
 
  [ALU Verilog Module](#alu-verilog-module)
